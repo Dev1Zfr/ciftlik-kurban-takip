@@ -1,0 +1,82 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white fw-bold fs-5">
+                ➕ Yeni Hayvan Alışı (Kayıt)
+            </div>
+            <div class="card-body p-4">
+                <form action="/ekle" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kayıt Türü Seçin:</label>
+                        <select name="kayit_turu" id="kayit_turu" class="form-select" onchange="turDegistir()">
+                            <option value="Bireysel">Tekli (Bireysel) Kayıt</option>
+                            <option value="Toplu">Toplu (Grup) Kayıt</option>
+                        </select>
+                    </div>
+
+                    <!-- BİREYSEL KÜPE NO ALANI -->
+                    <div class="mb-3" id="bireyselKutu">
+                        <label class="form-label fw-bold">Küpe Numarası:</label>
+                        <input type="text" name="kupe_no" id="kupe_no_input" class="form-control" placeholder="Örn: TR-55-12345" required>
+                    </div>
+
+                    <!-- TOPLU KAYIT ALANLARI -->
+                    <div id="topluKutu" style="display: none;">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Grup Adı:</label>
+                                <input type="text" name="grup_adi" class="form-control" placeholder="Örn: Simental Grup 1">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Kaç Adet Hayvan Var?:</label>
+                            <input type="number" name="adet" class="form-control" placeholder="Örn: 10" min="1" max="500" value="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Irk:</label>
+                            <input type="text" name="irk" class="form-control" placeholder="Örn: Simental / Angus" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Alış KG (Canlı):</label>
+                            <input type="number" step="0.1" min="0.1" name="alis_kg" class="form-control" placeholder="Örn: 350.5" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Alış Fiyatı (₺):</label>
+                            <input type="number" step="0.01" min="0" name="alis_fiyati" class="form-control" placeholder="Örn: 45000" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2 mt-2">Hayvanı / Sürüyü Sisteme Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function turDegistir() {
+    var tur = document.getElementById('kayit_turu').value;
+    var bireyselKutu = document.getElementById('bireyselKutu');
+    var topluKutu = document.getElementById('topluKutu');
+    var kupeInput = document.getElementById('kupe_no_input');
+
+    if (tur === 'Toplu') {
+        bireyselKutu.style.display = 'none';
+        kupeInput.required = false;
+        topluKutu.style.display = 'block';
+    } else {
+        bireyselKutu.style.display = 'block';
+        kupeInput.required = true;
+        topluKutu.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

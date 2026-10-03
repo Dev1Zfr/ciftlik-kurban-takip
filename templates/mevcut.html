@@ -1,0 +1,131 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h2 class="mb-4 text-dark fw-bold">2. Mevcut Hayvanlar & Yönetim</h2>
+
+<ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold" id="hayvanlar-tab" data-bs-toggle="tab" data-bs-target="#hayvanlar-pane" type="button" role="tab">📦 Gruplu Hayvan Listesi</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold text-success" id="sirali-tab" data-bs-toggle="tab" data-bs-target="#sirali-pane" type="button" role="tab">📈 Günlük Canlı Ağırlık Artış Sıralaması</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="myTabContent">
+    <!-- 1. SEKME: GRUPLANMIŞ HAYVAN LİSTESİ -->
+    <div class="tab-pane fade show active" id="hayvanlar-pane" role="tabpanel">
+
+        <form id="topluForm" action="/toplu-satis" method="POST" class="p-3 bg-light rounded border shadow-sm mb-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <h5 class="fw-bold text-warning mb-3">📦 Seçili Hayvanları Toplu Sat</h5>
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <input type="text" name="alici_ad" class="form-control" placeholder="Müşteri Ad Soyad / Firma Adı" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="alici_tel" class="form-control" placeholder="Telefon">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" step="0.01" min="0.01" name="toplam_satis_fiyati" class="form-control" placeholder="Toplam Fiyat (₺)" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-warning w-100 fw-bold">İşaretlileri Sat</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- AÇIK AKORDEON LİSTESİ -->
+        <div class="accordion shadow-sm" id="grupAccordion">
+            {% for grup_adi, hayvan_listesi in gruplar.items() %}
+            <div class="accordion-item mb-3 border">
+                <h2 class="accordion-header" id="heading-{{ loop.index }}">
+                    <button class="accordion-button fw-bold fs-5 bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="true">
+                        📂 {{ grup_adi }} (Toplam: {{ hayvan_listesi|length }} Baş Hayvan)
+                    </button>
+                </h2>
+                <!-- show sınıfı eklendi: Sayfa açıldığında hayvanlar doğrudan görünür -->
+                <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse show">
+                    <div class="accordion-body bg-light">
+                        <div class="row">
+                            {% for hayvan in hayvan_listesi %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card shadow-sm border-0 h-100">
+                                    <div class="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <input type="checkbox" name="secilen_hayvanlar" value="{{ hayvan.id }}" form="topluForm" class="form-check-input me-2">
+                                            <span>Küpe No: {{ hayvan.kupe_no }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>Irk:</strong> {{ hayvan.irk }} | <strong>Alış Fiyatı:</strong> {{ hayvan.alis_fiyati }} ₺</p>
+                                        <hr class="my-2">
+                                        <div class="d-flex justify-content-between">
+                                            <p class="mb-1"><strong>Alış KG:</strong> {{ hayvan.alis_kg }} kg</p>
+                                            <p class="text-primary fs-5 mb-1"><strong>Güncel:</strong> {{ hayvan.guncel_kg }} kg</p>
+                                        </div>
+                                        <p class="text-danger fw-bold mb-3">Ortalama Artış: +{{ hayvan.gunluk_artis }} kg/gün</p>
+
+                                        <div class="d-flex gap-2 mb-2">
+                                            <a href="/satis-yap/{{ hayvan.id }}" class="btn btn-outline-warning btn-sm fw-bold w-50">💰 Satış Yap</a>
+                                            <a href="/gecmis/{{ hayvan.id }}" class="btn btn-outline-info btn-sm fw-bold w-50">📊 Tartım Geçmişi</a>
+                                        </div>
+
+                                        <form action="/guncelle/{{ hayvan.id }}" method="POST">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" step="0.1" min="0.1" name="yeni_kg" class="form-control" placeholder="Yeni KG Tartımı" required>
+                                                <button class="btn btn-secondary" type="submit">Güncelle</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-warning m-3 p-4 text-center">
+                <h5>Henüz kayıtlı mevcut hayvan bulunmuyor.</h5>
+                <p class="mb-0">"1. Hayvan Alış" ekranından bireysel veya toplu kayıt ekleyebilirsiniz.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 2. SEKME: GÜNLÜK KG ARTIŞ SIRALAMASI -->
+    <div class="tab-pane fade" id="sirali-pane" role="tabpanel">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white fw-bold">📈 Günlük Canlı Ağırlık Artışına Göre Sıralama</div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sıra</th>
+                            <th>Küpe No</th>
+                            <th>Grup</th>
+                            <th>Alış KG</th>
+                            <th>Güncel KG</th>
+                            <th>Günlük Canlı Ağırlık Artışı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hayvan in hayvanlar_sirali %}
+                        <tr>
+                            <td><span class="badge bg-secondary">#{{ loop.index }}</span></td>
+                            <td class="fw-bold">{{ hayvan.kupe_no }}</td>
+                            <td>{{ hayvan.grup_adi }}</td>
+                            <td>{{ hayvan.alis_kg }} kg</td>
+                            <td class="fw-bold text-primary">{{ hayvan.guncel_kg }} kg</td>
+                            <td><span class="badge bg-success fs-6">+{{ hayvan.gunluk_artis }} kg/gün</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

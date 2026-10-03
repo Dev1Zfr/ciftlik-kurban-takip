@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="p-5 mb-4 bg-success text-white rounded-4 shadow">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <span class="badge bg-warning text-dark mb-3">AYRI MODÜL</span>
+            <h1 class="display-5 fw-bold">🚜 Kaba Yem Pazarı</h1>
+            <p class="lead mb-0">Yonca, saman ve silaj işlemleri rasyon ve depo kayıtlarından ayrı bir alanda yönetilir.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+            <a href="{{ url_for('rasyon') }}" class="btn btn-light btn-lg">← Rasyon Yönetimine Dön</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm"><div class="card-body p-4">
+            <div class="display-4">🌿</div><h3>Yonca</h3><p class="text-muted mb-0">Balya ve dökme yonca ilanları için ayrılmış kategori.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm"><div class="card-body p-4">
+            <div class="display-4">🌾</div><h3>Saman</h3><p class="text-muted mb-0">Buğday ve arpa samanı alım-satım alanı.</p>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm"><div class="card-body p-4">
+            <div class="display-4">🚜</div><h3>Silaj</h3><p class="text-muted mb-0">Mısır silajı ve diğer kaba yem ürünleri kategorisi.</p>
+        </div></div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4 mb-0">
+    <strong>Not:</strong> Bu alan rasyon stoklarını değiştirmez. İlan oluşturma ve üreticiler arası iletişim özellikleri sonraki pazar yeri sürümüne ayrılmıştır.
+</div>
+{% endblock %}

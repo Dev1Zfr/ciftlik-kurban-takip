@@ -1,0 +1,204 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">🌾 Rasyon ve Yem Stok Yönetimi</h2>
+        <p class="text-muted mb-0">Depodaki yemi, tüketimi ve canlı ağırlığa uygun rasyonu tek ekrandan izleyin.</p>
+    </div>
+    <a href="{{ url_for('kaba_yem') }}" class="btn btn-outline-success">🚜 Kaba Yem Sitesine Git</a>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-primary text-white fw-bold">Mevcut Yem Stoku</div>
+            <div class="card-body">
+                <form action="{{ url_for('yem_ekle') }}" method="POST" class="row g-2 mb-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="col-7"><input type="text" maxlength="100" name="yem_adi" class="form-control" placeholder="Yem adı" required></div>
+                    <div class="col-5"><input type="number" min="0" step="0.1" name="stok_kg" class="form-control" placeholder="Stok (kg)" required></div>
+                    <div class="col-12"><button type="submit" class="btn btn-primary w-100">Stoğa Ekle / Miktarı Artır</button></div>
+                </form>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light"><tr><th>Yem Adı</th><th>Mevcut Stok</th><th></th></tr></thead>
+                        <tbody>
+                            {% for yem in yemler %}
+                            <tr>
+                                <td class="fw-bold">{{ yem.yem_adi }}</td>
+                                <td>{{ yem.stok_kg }} kg</td>
+                                <td class="text-end">
+                                    <form action="{{ url_for('yem_sil', id=yem.id) }}" method="POST" onsubmit="return confirm('Bu yemi stok listesinden silmek istiyor musunuz? Tüketim geçmişi korunur.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Sil</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted py-3">Henüz yem stoğu eklenmedi.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-danger text-white fw-bold">Harcanan Yem ve Tüketim Geçmişi</div>
+            <div class="card-body">
+                <form action="{{ url_for('yem_harca') }}" method="POST" class="row g-2 mb-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="col-md-4">
+                        <select name="yem_id" class="form-select" required>
+                            <option value="">Yem seçin...</option>
+                            {% for yem in yemler %}<option value="{{ yem.id }}">{{ yem.yem_adi }} — {{ yem.stok_kg }} kg</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3"><input type="number" min="0.01" step="0.1" name="harcanan_kg" class="form-control" placeholder="Harcanan kg" required></div>
+                    <div class="col-md-3"><input type="text" maxlength="200" name="aciklama" class="form-control" placeholder="Grup / açıklama"></div>
+                    <div class="col-md-2"><button type="submit" class="btn btn-danger w-100">Düş</button></div>
+                </form>
+                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-light sticky-top"><tr><th>Tarih</th><th>Yem</th><th>Miktar</th><th>Açıklama</th></tr></thead>
+                        <tbody>
+                            {% for tuketim in tuketimler %}
+                            <tr>
+                                <td>{{ tuketim.tarih.strftime('%d.%m.%Y %H:%M') }}</td>
+                                <td class="fw-bold">{{ tuketim.yem_adi }}</td>
+                                <td class="text-danger">−{{ tuketim.harcanan_kg }} kg</td>
+                                <td>{{ tuketim.aciklama or '—' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">Henüz tüketim kaydı yok.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center">
+        <span>📊 Canlı Ağırlığa Göre Rasyon Hesaplama</span>
+        <select id="profilSecimi" class="form-select form-select-sm" style="max-width: 230px;" onchange="hesapla()">
+            {% for profil in ration_profiles %}
+            <option value="{{ loop.index0 }}">{{ profil.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">
+            Yem adını seçin ve miktarı girin. Enerji, protein ve kuru madde değerleri otomatik gelir;
+            üretici değerleri istediği zaman değiştirebilir.
+        </p>
+        <div id="profilBilgisi" class="alert alert-secondary py-2"></div>
+        <div id="rasyonUyari" class="alert alert-danger d-none" role="alert"></div>
+
+        <datalist id="yemOnerileri">
+            {% for ad in standard_feeds %}<option value="{{ ad }}">{% endfor %}
+            {% for yem in yemler %}<option value="{{ yem.yem_adi }}">{% endfor %}
+        </datalist>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="min-width: 180px;">Yem Adı</th>
+                        <th>Miktar (kg)</th>
+                        <th>Enerji (ME/kg)</th>
+                        <th>Protein (%)</th>
+                        <th>Kuru Madde (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="rasyonSatirlari">
+                    {% for i in range(1, 6) %}
+                    <tr class="rasyon-satir">
+                        <td><input type="text" list="yemOnerileri" class="form-control yem-adi-input" placeholder="Yem seçin" oninput="yemSecildi(this)"></td>
+                        <td><input type="number" min="0" step="0.1" class="form-control miktar-input" placeholder="0" oninput="hesapla()"></td>
+                        <td><input type="number" min="0" step="0.01" class="form-control enerji-input" placeholder="0" oninput="hesapla()"></td>
+                        <td><input type="number" min="0" max="100" step="0.1" class="form-control protein-input" placeholder="0" oninput="hesapla()"></td>
+                        <td><input type="number" min="0" max="100" step="0.1" class="form-control kuru-madde-input" placeholder="0" oninput="hesapla()"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row g-3 mt-2 text-center">
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><small>Toplam Yem</small><div class="fs-4 fw-bold"><span id="sonucKg">0.0</span> kg</div></div></div>
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><small>Toplam Enerji</small><div class="fs-4 fw-bold"><span id="sonucEnerji">0.0</span> ME</div></div></div>
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><small>Ortalama Protein</small><div class="fs-4 fw-bold">%<span id="sonucProtein">0.0</span></div></div></div>
+            <div class="col-md-3"><div class="p-3 bg-light rounded"><small>Toplam Kuru Madde</small><div class="fs-4 fw-bold"><span id="sonucKuruMadde">0.0</span> kg</div></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const standartYemler = {{ standard_feeds|tojson }};
+const rasyonProfilleri = {{ ration_profiles|tojson }};
+
+function normalizeYemAdi(value) {
+    return value.toLocaleLowerCase('tr-TR').trim();
+}
+
+function yemSecildi(inputEl) {
+    const satir = inputEl.closest('.rasyon-satir');
+    const degerler = standartYemler[normalizeYemAdi(inputEl.value)];
+    if (degerler) {
+        satir.querySelector('.enerji-input').value = degerler.energy;
+        satir.querySelector('.protein-input').value = degerler.protein;
+        satir.querySelector('.kuru-madde-input').value = degerler.dry_matter;
+    }
+    hesapla();
+}
+
+function sayi(satir, secici) {
+    return Math.max(0, parseFloat(satir.querySelector(secici).value) || 0);
+}
+
+function hesapla() {
+    let toplamKg = 0;
+    let toplamEnerji = 0;
+    let agirlikliProtein = 0;
+    let toplamKuruMadde = 0;
+
+    document.querySelectorAll('.rasyon-satir').forEach(satir => {
+        const kg = sayi(satir, '.miktar-input');
+        const enerji = sayi(satir, '.enerji-input');
+        const protein = sayi(satir, '.protein-input');
+        const kuruMadde = sayi(satir, '.kuru-madde-input');
+        toplamKg += kg;
+        toplamEnerji += kg * enerji;
+        agirlikliProtein += kg * protein;
+        toplamKuruMadde += kg * kuruMadde / 100;
+    });
+
+    const ortalamaProtein = toplamKg > 0 ? agirlikliProtein / toplamKg : 0;
+    document.getElementById('sonucKg').textContent = toplamKg.toFixed(1);
+    document.getElementById('sonucEnerji').textContent = toplamEnerji.toFixed(2);
+    document.getElementById('sonucProtein').textContent = ortalamaProtein.toFixed(1);
+    document.getElementById('sonucKuruMadde').textContent = toplamKuruMadde.toFixed(2);
+
+    const profil = rasyonProfilleri[parseInt(document.getElementById('profilSecimi').value, 10)];
+    document.getElementById('profilBilgisi').textContent =
+        `Hedef: yaklaşık ${profil.energy} ME enerji, %${profil.protein} protein ve ${profil.dry_matter} kg kuru madde.`;
+
+    const uyarilar = [];
+    if (toplamEnerji > profil.energy * 1.15) uyarilar.push('Enerji hedefin %15 üzerine çıktı.');
+    if (ortalamaProtein > profil.protein + 3) uyarilar.push('Protein oranı hedefin 3 puan üzerine çıktı.');
+    if (toplamKuruMadde > profil.dry_matter * 1.15) uyarilar.push('Kuru madde hedefin %15 üzerine çıktı.');
+    const uyari = document.getElementById('rasyonUyari');
+    uyari.classList.toggle('d-none', uyarilar.length === 0);
+    uyari.innerHTML = uyarilar.length
+        ? `<strong>Hayvan sağlığı uyarısı:</strong> ${uyarilar.join(' ')}`
+        : '';
+}
+
+document.addEventListener('DOMContentLoaded', hesapla);
+</script>
+{% endblock %}

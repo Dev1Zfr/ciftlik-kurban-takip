@@ -1,0 +1,62 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark fw-bold fs-5">Küpe No: {{ hayvan.kupe_no }} — Satış Paneli</div>
+            <div class="card-body text-center">
+                <p><strong>Irk:</strong> {{ hayvan.irk }} | <strong>Güncel KG:</strong> {{ hayvan.guncel_kg }} kg</p>
+
+                <div class="d-flex justify-content-center gap-3 mb-4 mt-3">
+                    <button class="btn btn-lg btn-primary fw-bold" onclick="showForm('bireysel')">Bireysel Satış Yap</button>
+                    <button class="btn btn-lg btn-success fw-bold" onclick="showForm('kurban')">Kurbanlık (7 Hisse) Satış Yap</button>
+                </div>
+
+                <!-- BİREYSEL SATIŞ FORMU -->
+                <form method="POST" id="bireyselForm" class="p-3 bg-light border rounded text-start" style="display: none;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="satis_turu" value="Normal">
+                    <h5 class="fw-bold text-primary mb-3">Bireysel Müşteri Bilgileri</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4"><input type="text" name="alici_ad" class="form-control" placeholder="Müşteri Ad Soyad" required></div>
+                        <div class="col-md-4"><input type="text" name="alici_tel" class="form-control" placeholder="Telefon"></div>
+                        <div class="col-md-4"><input type="number" step="0.01" min="0.01" name="satis_fiyati" class="form-control" placeholder="Toplam Fiyat (₺)" required></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Bireysel Satışı Kaydet</button>
+                </form>
+
+                <!-- KURBANLIK SATIŞ FORMU -->
+                <form method="POST" id="kurbanForm" class="p-3 bg-light border rounded text-start" style="display: none;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="satis_turu" value="Kurban">
+                    <h5 class="fw-bold text-success mb-3">Kurbanlık Hissedar Bilgileri</h5>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6"><input type="number" step="0.01" min="0.01" name="satis_fiyati" class="form-control" placeholder="Toplam Hayvan Fiyatı (₺)" required></div>
+                        <div class="col-md-6"><input type="number" min="1" name="kesim_sirasi" class="form-control" placeholder="Planlanan Kesim Sırası" required></div>
+                    </div>
+                    <div class="row g-2">
+                        {% for i in range(1, 8) %}
+                        <div class="col-md-6 mb-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text fw-bold">{{ i }}. Hisse</span>
+                                <input type="text" name="hissedar_ad_{{ i }}" class="form-control" placeholder="İsim Soyisim" required>
+                                <input type="text" name="hissedar_tel_{{ i }}" class="form-control" placeholder="Telefon">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold mt-2">Kurbanlık Satışını Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function showForm(type) {
+    document.getElementById('bireyselForm').style.display = type === 'bireysel' ? 'block' : 'none';
+    document.getElementById('kurbanForm').style.display = type === 'kurban' ? 'block' : 'none';
+    document.getElementById('bireyselForm').querySelectorAll('input[required]').forEach(el => el.required = type === 'bireysel');
+    document.getElementById('kurbanForm').querySelectorAll('input[required]').forEach(el => el.required = type === 'kurban');
+}
+</script>
+{% endblock %}

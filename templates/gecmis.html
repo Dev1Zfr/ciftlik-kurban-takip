@@ -1,0 +1,53 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">{{ hayvan.kupe_no }} — Canlı Ağırlık Geçmişi</h2>
+        <p class="text-muted mb-0">Tüm tartımlar ve canlı ağırlık performansı</p>
+    </div>
+    <a href="{{ url_for('mevcut') }}" class="btn btn-outline-secondary">← Hayvanlara Dön</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <small class="text-muted">Canlı Ağırlık Ortalaması</small>
+            <h3 class="text-primary fw-bold mb-0">{{ ortalama_kilo }} kg</h3>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <small class="text-muted">Güncel Canlı Ağırlık</small>
+            <h3 class="text-success fw-bold mb-0">{{ hayvan.guncel_kg }} kg</h3>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <small class="text-muted">Toplam Artış</small>
+            <h3 class="fw-bold mb-0">{{ toplam_artis }} kg</h3>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body">
+            <small class="text-muted">Günlük Canlı Ağırlık Artışı</small>
+            <h3 class="text-danger fw-bold mb-0">{{ hayvan.gunluk_artis }} kg/gün</h3>
+        </div></div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white fw-bold">Tartım Kayıtları</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Tarih ve Saat (UTC)</th><th>Ölçülen Canlı Ağırlık</th></tr></thead>
+            <tbody>
+                {% for tartim in tartimlar %}
+                <tr><td>{{ tartim.tarih.strftime('%d.%m.%Y %H:%M') }}</td><td class="fw-bold">{{ tartim.kilo }} kg</td></tr>
+                {% else %}
+                <tr><td colspan="2" class="text-center text-muted py-4">Henüz tartım kaydı bulunmuyor.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

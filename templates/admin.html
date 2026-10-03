@@ -1,0 +1,119 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h2 class="mb-4 text-dark fw-bold">⚙️ Yönetici & Admin Paneli</h2>
+
+<!-- FİNANSAL VE ÇİFTLİK ÖZET KARTLARI -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white p-3 shadow-sm">
+            <h5>Mevcut Hayvan</h5>
+            <h2 class="fw-bold">{{ mevcut_hayvan }} Adet</h2>
+            <small>Toplam: {{ toplam_hayvan }} baş hayvan kaydedildi</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white p-3 shadow-sm">
+            <h5>Toplam Ciro (Satış)</h5>
+            <h2 class="fw-bold">{{ "{:,.2f}".format(toplam_satis_tutari) }} ₺</h2>
+            <small>{{ satilan_hayvan }} Adet Satılan Hayvan</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white p-3 shadow-sm">
+            <h5>Tahsil Edilen Para</h5>
+            <h2 class="fw-bold">{{ "{:,.2f}".format(toplam_tahsilat) }} ₺</h2>
+            <small>Kasa / Bankaya Giren Net Tutar</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white p-3 shadow-sm">
+            <h5>Kalan Müşteri Alacağı</h5>
+            <h2 class="fw-bold">{{ "{:,.2f}".format(toplam_kalan_alacak) }} ₺</h2>
+            <small>Piyasadan Alınacak Toplam Borç</small>
+        </div>
+    </div>
+</div>
+
+<!-- KULLANICI YÖNETİMİ -->
+<div class="row">
+    <!-- KULLANICI EKLE FORMU -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white fw-bold">➕ Yeni Kullanıcı / Personel Ekle</div>
+            <div class="card-body">
+                <form action="/admin/kullanici-ekle" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Kullanıcı Adı</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_admin" id="adminCheck">
+                        <label class="form-check-label fw-bold text-danger" for="adminCheck">
+                            Yönetici (Admin) Yetkisi Ver
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold">Hesap Oluştur</button>
+                </form>
+                <hr>
+                <h6 class="fw-bold">Kendi Parolanızı Değiştirin</h6>
+                <form action="{{ url_for('parola_degistir') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="password" name="mevcut_parola" class="form-control mb-2" placeholder="Mevcut parola" required>
+                    <input type="password" name="yeni_parola" class="form-control mb-2" minlength="10" placeholder="Yeni parola (en az 10 karakter)" required>
+                    <button type="submit" class="btn btn-outline-primary w-100">Parolayı Güncelle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- KULLANICI LİSTESİ -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white fw-bold">👥 Kayıtlı Sistem Kullanıcıları</div>
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Kullanıcı Adı</th>
+                            <th>Yetki Durumu</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in kullanicilar %}
+                        <tr>
+                            <td>#{{ user.id }}</td>
+                            <td class="fw-bold">{{ user.username }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                    <span class="badge bg-danger fs-6">Admin (Yönetici)</span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">Standart Kullanıcı</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.username != 'admin' %}
+                                <form action="/admin/kullanici-sil/{{ user.id }}" method="POST" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                </form>
+                                {% else %}
+                                <small class="text-muted">Ana Yönetici (Silinemez)</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

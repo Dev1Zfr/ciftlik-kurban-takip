@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container text-center mt-5 pt-4">
+    <h1 class="display-4 fw-bold mb-5 text-dark">Çiftlik Yönetim Sistemine Hoşgeldiniz</h1>
+    
+    <div class="row g-4 justify-content-center">
+        <!-- BÜYÜK BUTON 1 -->
+        <div class="col-md-4">
+            <a href="/ekle" class="btn btn-primary w-100 py-5 shadow rounded-4 text-decoration-none transition-hover">
+                <div class="display-1 mb-3">📥</div>
+                <h2 class="fw-bold">Hayvan Alış</h2>
+                <p class="text-light">Tekli veya Toplu Grup Alışı</p>
+            </a>
+        </div>
+        
+        <!-- BÜYÜK BUTON 2 -->
+        <div class="col-md-4">
+            <a href="/mevcut" class="btn btn-success w-100 py-5 shadow rounded-4 text-decoration-none transition-hover">
+                <div class="display-1 mb-3">🐄</div>
+                <h2 class="fw-bold">Mevcut Hayvanlar</h2>
+                <p class="text-light">Tartım, Performans ve Toplu Satış</p>
+            </a>
+        </div>
+        
+        <!-- BÜYÜK BUTON 3 -->
+        <div class="col-md-4">
+            <a href="/satilanlar" class="btn btn-danger w-100 py-5 shadow rounded-4 text-decoration-none transition-hover">
+                <div class="display-1 mb-3">📤</div>
+                <h2 class="fw-bold">Hayvan Satış</h2>
+                <p class="text-light">Kurban Hisseleri ve Tahsilat</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-hover { transition: transform 0.2s ease-in-out; }
+    .transition-hover:hover { transform: scale(1.05); }
+</style>
+{% endblock %}
